@@ -17,9 +17,19 @@ main =
         }
 
 
-rand : Int -> Int
-rand limit =
-    step (Random.int 0 limit) (initialSeed limit) |> Tuple.first
+randomize =
+    True
+
+
+splitIndex : Int -> Int
+splitIndex limit =
+    if randomize then
+        -- Insert at "random" location.
+        step (Random.int 0 limit) (initialSeed limit) |> Tuple.first
+
+    else
+    -- Always insert at the end.
+        limit
 
 
 update : Int -> List Int -> List Int
@@ -27,18 +37,26 @@ update inc keys =
     let
         len =
             List.length keys
-
-        ( l, r ) =
-            splitAt (rand len) keys
     in
-    l ++ (List.range 1 inc |> List.map ((+) len)) ++ r
+    List.range 1 inc
+        |> List.map ((+) len)
+        |> List.foldl
+            (\k acc ->
+                let
+                    ( l, r ) =
+                        splitAt (splitIndex k) acc
+                in
+                l ++ [ k ] ++ r
+            )
+            keys
 
 
 view : List Int -> Html Int
 view keys =
     div []
         [ h1 [] [ text "Elements flash in green when they're attached to the DOM" ]
-        , text "When more than one row is added at a time, the final row is redundantly detached and reattached, causing it to lose focus."
+        , p [] [ text "When more than one consecutive row is added at a time, all rows following them are redundantly detached and reattached." ]
+        , p [] [ text "If a button on the last row had focus, it will lose it." ]
         , Html.Keyed.node "table"
             []
             (List.concat
