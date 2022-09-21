@@ -7,41 +7,29 @@ import Html.Events exposing (..)
 import Html.Keyed
 
 
-main : Program () Bool ()
+main : Program () Int ()
 main =
     Browser.sandbox
-        { init = False
+        { init = 0
         , view = view
-        , update = always not
+        , update = always ((+) 2)
         }
 
 
-view : Bool -> Html ()
-view model =
-    div []
-        [ Html.Keyed.node "div"
-            []
-            ([ input_ "A"
-             , input_ "B"
-             ]
-                |> (\x ->
-                        if model then
-                            List.reverse x
-
-                        else
-                            x
-                   )
-            )
-        , text "Type to swaps inputs."
-        ]
+update : () -> Int -> Int
+update msg model =
+    case msg of
+        () ->
+            model + 1
 
 
-input_ a =
-    ( a
-    , input
-        [ id a
-        , value a
-        , onInput (\_ -> ())
-        ]
+view : Int -> Html ()
+view rowCount =
+    Html.Keyed.node "table"
         []
-    )
+        (List.concat
+            [ [ ( "first", tr [] [ td [] [ button [ onClick () ] [ text "Add row" ] ] ] ) ]
+            , List.range 0 rowCount |> List.map (\key -> ( String.fromInt key, tr [] [ td [] [] ] ))
+            , [ ( "last", tr [] [ td [] [ button [ onClick () ] [ text "Add row" ] ] ] ) ]
+            ]
+        )
