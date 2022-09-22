@@ -1,0 +1,53 @@
+name: Build and publish
+on:
+  push:
+    branches: [main]
+
+# Disallow concurrent workflows.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+env:
+  ELM_VERSION: 0.19.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up Elm
+      uses: jorelali/setup-elm@v3
+      with:
+        elm-version: ${{env.ELM_VERSION}}
+    - name: Compile Elm to JavaScript
+      run: elm make ./src/Main.elm --output=./dist/main.js
+    - name: Package site
+      run: tar -cf ./site.tar ./index.html ./dist/
+    - name: Upload site package
+      uses: actions/upload-artifact@main
+      with:
+        name: github-pages
+        path: ./site.tar
+
+  publish:
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment.
+    permissions:
+      pages: write    # permission to deploy to Pages
+      id-token: write # permission to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment.
+    # Build and deployment source "GitHub Actions" must be selected in the repo settings
+    # for the URL variable to be non-empty.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish site on GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
