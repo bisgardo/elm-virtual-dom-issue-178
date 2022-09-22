@@ -5,16 +5,17 @@
     <title>Test</title>
     <script src="./dist/main.js"></script>
     <style>
+        /* old-school table rendering */
         table, th, td {
             border: 1px solid;
         }
 
+        /* make any element inserted into the DOM flash green for 0.5s */
         * {
-            animation-name: fade;
+            animation-name: flash;
             animation-duration: .5s;
         }
-
-        @keyframes fade {
+        @keyframes flash {
             from {
                 background-color: green;
             }

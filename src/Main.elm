@@ -2,13 +2,16 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes exposing (href)
 import Html.Events exposing (..)
 import Html.Keyed exposing (..)
 import List.Extra exposing (..)
-import Random exposing (Seed, initialSeed, step)
+import Random exposing (..)
 
 
-main : Program () (List Int) Int
+type InsertLocation = Middle | Random
+
+main : Program () (List Int) (Int, InsertLocation)
 main =
     Browser.sandbox
         { init = []
@@ -17,23 +20,19 @@ main =
         }
 
 
-randomize =
-    True
+
+splitIndex : InsertLocation -> Int -> Int
+splitIndex loc limit =
+    case loc of
+        Middle -> limit // 2
+        Random ->
+            step (Random.int 0 limit) (initialSeed limit) |> Tuple.first
 
 
-splitIndex : Int -> Int
-splitIndex limit =
-    if randomize then
-        -- Insert at "random" location.
-        step (Random.int 0 limit) (initialSeed limit) |> Tuple.first
-
-    else
-    -- Always insert at the end.
-        limit
 
 
-update : Int -> List Int -> List Int
-update inc keys =
+update : (Int, InsertLocation) -> List Int -> List Int
+update (inc, loc) keys =
     let
         len =
             List.length keys
@@ -44,19 +43,20 @@ update inc keys =
             (\k acc ->
                 let
                     ( l, r ) =
-                        splitAt (splitIndex k) acc
+                        splitAt (splitIndex loc k) acc
                 in
                 l ++ [ k ] ++ r
             )
             keys
 
 
-view : List Int -> Html Int
+view : List Int -> Html (Int, InsertLocation)
 view keys =
     div []
-        [ h1 [] [ text "Elements flash in green when they're attached to the DOM" ]
-        , p [] [ text "When more than one consecutive row is added at a time, all rows following them are redundantly detached and reattached." ]
-        , p [] [ text "If a button on the last row had focus, it will lose it." ]
+        [ h1 [] [text "Demonstration of ", a [href "https://github.com/elm/virtual-dom/issues/178"] [text "elm/virtual-dom#178"]]
+        , p [] [ text "Elements flash in green when they're attached to the DOM." ]
+        , p [] [ text "When more than one consecutive row is added at a time, then all rows following them are redundantly detached and reattached." ]
+        , p [] [ text "If a button on the last row had focus, it will lose it. This can be seen by clicking the button. Pressing ENTER will then \"click\" it again as long as it retains focus." ]
         , Html.Keyed.node "table"
             []
             (List.concat
@@ -71,6 +71,8 @@ view keys =
 
 
 buttons =
-    [ button [ onClick 1 ] [ text "Add 1 row" ]
-    , button [ onClick 2 ] [ text "Add 2 rows" ]
+    [ button [ onClick (1, Middle) ] [ text "Add 1 row (middle)" ]
+    , button [ onClick (2, Middle) ] [ text "Add 2 rows (middle)" ]
+    , button [ onClick (1, Random) ] [ text "Add 1 row (randomly)" ]
+    , button [ onClick (2, Random) ] [ text "Add 2 rows (randomly)" ]
     ]
