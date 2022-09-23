@@ -5,7 +5,8 @@ import Html exposing (..)
 import Html.Attributes exposing (href)
 import Html.Events exposing (..)
 import Html.Keyed exposing (..)
-import List.Extra exposing (..)
+import List exposing (..)
+import List.Extra as List
 import Random exposing (..)
 
 
@@ -34,20 +35,17 @@ splitIndex loc limit =
 
 
 update : ( Int, InsertLocation ) -> List Int -> List Int
-update ( inc, loc ) keys =
+update ( insertCount, loc ) keys =
     let
         len =
-            List.length keys
+            length keys
     in
-    List.range 1 inc
+    List.range 1 insertCount
         |> List.map ((+) len)
         |> List.foldl
-            (\k acc ->
-                let
-                    ( l, r ) =
-                        splitAt (splitIndex loc k) acc
-                in
-                l ++ [ k ] ++ r
+            (\newKey ->
+                List.splitAt (splitIndex loc newKey)
+                    >> (\( l, r ) -> l ++ [ newKey ] ++ r)
             )
             keys
 
