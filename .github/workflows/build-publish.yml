@@ -26,7 +26,7 @@ jobs:
     - name: Package site
       run: tar -cf ./site.tar ./index.html ./dist/
     - name: Upload site package
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v3
       with:
         name: github-pages
         path: ./site.tar
